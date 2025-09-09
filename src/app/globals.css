@@ -1,26 +1,178 @@
 @import "tailwindcss";
 
+/* Theme variables (overridden by .theme-dark / .theme-light on <html>) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --base-bg: #0b0d0f;
+  --text: #ffffff;
+  --grid: rgba(255,255,255,0.05);
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.10);
+  --muted: 220 20% 65%;
+  --accent: #3b82f6; /* blue-600 */
+  /* Blue gradient hues (same for both themes) */
+  --glow-a: rgba(56, 189, 248, 0.10);   /* sky-400 */
+  --glow-b: rgba(59, 130, 246, 0.12);   /* blue-500 */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.theme-dark {
+  --base-bg: #0b0d0f;
+  --text: #ffffff;
+  --grid: rgba(255,255,255,0.05);
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.10);
+  --muted: 220 20% 65%;
+  --accent: #3b82f6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.theme-light {
+  --base-bg: #f7fbff;
+  --text: #0b1220;
+  --grid: rgba(0,0,0,0.06);
+  --glass-bg: rgba(10,10,10,0.06);
+  --glass-border: rgba(10,10,10,0.10);
+  --muted: 220 15% 35%;
+  --accent: #2563eb; /* slightly darker in light */
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% 10%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 500px at 85% 20%, var(--glow-b), transparent 60%),
+    var(--base-bg);
+  transition: background-color .35s ease, color .25s ease;
+}
+
+/* Subtle grid overlay like the reference */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+  opacity: .25;
+  z-index: 0;
+}
+
+/* Reusable utilities (no plugin needed) */
+.glass { background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
+
+.btn-glass { @apply rounded-xl px-5 py-2.5 text-sm text-white hover:bg-white/10 transition-colors; }
+.btn-glass { background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
+.theme-light .btn-glass { color: #0b1220; }
+
+.btn-glass--primary { background-color: color-mix(in oklab, var(--glass-bg) 65%, white 35%); }
+.theme-light .btn-glass--primary { background-color: color-mix(in oklab, var(--glass-bg) 40%, black 60%); }
+
+.badge-glass { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white/90; }
+.badge-glass { background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
+.badge-lg { font-size: 1rem; line-height: 1.5rem; }
+.theme-light .badge-glass { color: rgba(11,18,32,0.86); }
+
+.muted { color: hsl(var(--muted)); }
+
+/* Theme-aware muted text */
+.text-soft { color: rgba(255,255,255,0.72); }
+.theme-light .text-soft { color: rgba(11,18,32,0.72); }
+
+/* Navbar link color that adapts with theme */
+.nav-link { color: rgba(255,255,255,0.86); }
+.theme-light .nav-link { color: rgba(11,18,32,0.86); }
+.nav-link:hover { color: var(--accent); }
+
+/* Active pill state for navbar */
+.nav-pill-active { color: var(--accent); border: 1px solid color-mix(in oklab, var(--accent) 35%, var(--glass-border)); background-color: color-mix(in oklab, var(--accent) 10%, transparent); }
+
+/* Cross-fade overlay for theme change */
+@keyframes themeFade {
+  from { opacity: .45; }
+  to { opacity: 0; }
+}
+.theme-fade-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background:
+    radial-gradient(1200px 600px at 10% 10%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 500px at 85% 20%, var(--glow-b), transparent 60%),
+    var(--base-bg);
+  animation: themeFade .22s ease both;
+}
+
+/* Parallax helpers */
+.parallax { will-change: transform; transition: transform .12s ease-out; }
+
+/* Grading chips animation */
+.chip-paper {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .6rem;
+  border-radius: 9999px;
+  font-size: .7rem;
+  color: var(--text);
+}
+.theme-light .chip-paper { color: rgba(11,18,32,.9); }
+
+.chip-paper .chip-check { display: none; color: #3b82f6; }
+.animate-grade .chip-check { display: inline-flex; }
+
+.chip-score {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-left: .4rem;
+  padding: .2rem .45rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, var(--glass-border));
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+  color: var(--accent);
+  animation: popIn .18s ease-out both;
+}
+@keyframes popIn { from { opacity:0; transform: translateY(4px) scale(.96);} to { opacity:1; transform: translateY(0) scale(1);} }
+
+@keyframes gradeMove {
+  0% { transform: translate3d(0,0,0) scale(1); opacity: 1; }
+  70% { transform: translate3d(520px,-140px,0) scale(.95); opacity: 1; }
+  100% { transform: translate3d(520px,-140px,0) scale(.95); opacity: .0; }
+}
+.animate-grade {
+  animation: gradeMove 1.6s cubic-bezier(.22,.9,.26,1) forwards;
+}
+
+/* Scan line inside main panel */
+.scanline { position: absolute; left: 0; right: 0; height: 32px; top: -32px; background: linear-gradient(to bottom, transparent, rgba(59,130,246,.25), transparent); filter: blur(1px); opacity: 0; }
+.scanline.active { animation: scan 1.4s ease-in-out .05s forwards; }
+@keyframes scan {
+  0% { top: -40px; opacity: 0; }
+  15% { opacity: .9; }
+  85% { opacity: .9; }
+  100% { top: calc(100% + 8px); opacity: 0; }
+}
+
+/* Responsive offsets for the center logo hotspot */
+.logo-hotspot { --ox: 18px; --oy: -8px; }
+@media (min-width: 640px) { .logo-hotspot { --ox: 24px; --oy: -6px; } }
+@media (min-width: 768px) { .logo-hotspot { --ox: 34px; --oy: -4px; } }
+@media (min-width: 1024px){ .logo-hotspot { --ox: 42px; --oy: -2px; } }
+
+/* Dark mode select dropdown readability */
+.theme-dark select option, .theme-dark select optgroup {
+  background-color: #0b0d0f !important;
+  color: #ffffff !important;
+}
+/* Improve contrast for the closed control in dark */
+.theme-dark select {
+  color: #ffffff;
 }

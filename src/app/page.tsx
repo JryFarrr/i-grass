@@ -1,103 +1,82 @@
-import Image from "next/image";
+import AGSVisual from './components/ags-visual';
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <section id="home" className="relative min-h-[85vh] flex items-center">
+      {/* Decorative background (right glow) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-[-14rem] top-10 -z-10 h-[680px] w-[680px] rounded-full opacity-30 blur-3xl"
+        style={{
+          background:
+            "conic-gradient(from 180deg at 50% 50%, #0b1220 0deg, #3b82f6 120deg, #38bdf8 240deg, #0b1220 360deg)",
+        }}
+      />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Content container */}
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-6 md:px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          {/* Left: Text */}
+          <div>
+            <div className="badge-glass mb-6">
+              <span className="inline-block w-3 h-3 rounded-full bg-blue-400 shadow-[0_0_12px_2px_rgba(59,130,246,0.8)]" />
+              <span>Laboratorium Machine Learning dan Big Data</span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">i-Gras</h1>
+            <p className="text-soft text-lg leading-relaxed max-w-xl mb-10">
+              Penilaian Cerdas untuk Pembelajaran Efektif melalui Automating Grading System yang mampu memberikan evaluasi objektif, cepat, dan adaptif, sehingga memudahkan pendidik dalam menilai hasil belajar sekaligus membantu peserta didik mendapatkan umpan balik yang tepat waktu untuk meningkatkan kualitas pembelajaran.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="btn-glass btn-glass--primary flex items-center gap-2">
+                <span>Learn How</span>
+                <span className="text-soft">&darr;</span>
+              </button>
+              <button className="btn-glass">More about Us</button>
+            </div>
+
+            {/* Social icons */}
+            <div className="mt-8 flex items-center gap-5 text-soft">
+              <a aria-label="GitHub" className="hover:text-white" href="#">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M12 2C6.477 2 2 6.589 2 12.253c0 4.515 2.865 8.34 6.839 9.695.5.094.682-.223.682-.498 0-.246-.009-.897-.014-1.76-2.782.617-3.369-1.37-3.369-1.37-.454-1.175-1.11-1.488-1.11-1.488-.907-.637.069-.624.069-.624 1.002.072 1.53 1.05 1.53 1.05.892 1.56 2.341 1.11 2.91.849.091-.662.35-1.11.636-1.366-2.22-.258-4.555-1.137-4.555-5.06 0-1.118.39-2.03 1.029-2.746-.103-.257-.446-1.296.098-2.701 0 0 .84-.273 2.75 1.048A9.32 9.32 0 0 1 12 6.844c.85.004 1.705.116 2.504.34 1.909-1.321 2.748-1.048 2.748-1.048.545 1.405.202 2.444.1 2.7.64.718 1.028 1.63 1.028 2.747 0 3.933-2.338 4.799-4.566 5.053.36.32.679.949.679 1.914 0 1.381-.013 2.496-.013 2.835 0 .277.18.596.688.495A10.03 10.03 0 0 0 22 12.253C22 6.589 17.523 2 12 2Z"
+                  />
+                </svg>
+              </a>
+              <a aria-label="Twitter" className="hover:text-white" href="#">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M21.543 7.104c.014.2.014.402.014.605 0 6.163-4.693 13.27-13.27 13.27-2.636 0-5.087-.77-7.15-2.1.366.043.718.058 1.1.058a9.39 9.39 0 0 0 5.824-2.007 4.693 4.693 0 0 1-4.379-3.252c.29.043.58.072.884.072.423 0 .846-.057 1.24-.162A4.686 4.686 0 0 1 2.9 8.47v-.058c.66.366 1.424.588 2.235.616A4.685 4.685 0 0 1 3.2 5.29c0-.87.232-1.679.64-2.378a13.32 13.32 0 0 0 9.66 4.9 5.285 5.285 0 0 1-.116-1.072 4.684 4.684 0 0 1 8.102-3.2 9.325 9.325 0 0 0 2.972-1.132 4.703 4.703 0 0 1-2.058 2.583 9.365 9.365 0 0 0 2.694-.73 10.068 10.068 0 0 1-2.549 2.643Z" />
+                </svg>
+              </a>
+              <a aria-label="Butterfly" className="hover:text-white" href="#">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 13c-1.657 0-3-1.343-3-3V4c0-.552.448-1 1-1s1 .448 1 1v3h2V4a1 1 0 1 1 2 0v6c0 1.657-1.343 3-3 3Zm7.5-4.5c-2 0-4 1-4 3s2 4 4 4 2-1.5 2-3.5-1-3.5-2-3.5ZM4.5 8.5c-1 0-2 1.5-2 3.5S3 15.5 4.5 15.5s4-2 4-4-2-3-4-3Z" />
+                </svg>
+              </a>
+              <a aria-label="Lock" className="hover:text-white" href="#">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M6 10V8a6 6 0 1 1 12 0v2h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h1Zm2 0h8V8a4 4 0 1 0-8 0v2Z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Right: Automated Grading System visual */}
+          <div className="relative hidden lg:block">
+            <AGSVisual />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </section>
   );
 }
