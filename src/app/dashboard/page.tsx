@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { MouseEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/auth-context";
@@ -42,6 +42,9 @@ export default function DashboardPage() {
     return data.filter(r => r.name === student);
   }, [student, data]);
 
+  // UI state for scoring effect
+  const [isScoring, setIsScoring] = useState(false);
+
   function startScoring() {
     // Simulate scoring
     setData(prev => prev.map(row => ({
@@ -49,6 +52,34 @@ export default function DashboardPage() {
       score: Math.floor(60 + Math.random() * 41),
       feedback: Math.random() > 0.6 ? "Perlu elaborasi lebih jelas." : "Jawaban sudah cukup baik.",
     })));
+  }
+
+  function createRipple(e: MouseEvent<HTMLButtonElement>) {
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    const circle = document.createElement('span');
+    const d = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - d / 2;
+    const y = e.clientY - rect.top - d / 2;
+    circle.style.width = circle.style.height = `${d}px`;
+    circle.style.left = `${x}px`;
+    circle.style.top = `${y}px`;
+    circle.className = 'ripple';
+    // cleanup old ripple if exists
+    const prev = target.getElementsByClassName('ripple')[0];
+    if (prev) prev.remove();
+    target.appendChild(circle);
+  }
+
+  function handleStartClick(e: MouseEvent<HTMLButtonElement>) {
+    if (isScoring) return;
+    createRipple(e);
+    setIsScoring(true);
+    // give some time to play the effect
+    setTimeout(() => {
+      startScoring();
+      setIsScoring(false);
+    }, 1200);
   }
 
   function openFile(row: Row) {
@@ -217,20 +248,29 @@ export default function DashboardPage() {
               </div>
             </div>
             <button
-              onClick={startScoring}
-              className="h-11 rounded-xl px-5 whitespace-nowrap font-semibold shadow"
+              onClick={handleStartClick}
+              disabled={isScoring}
+              className="relative overflow-hidden h-11 rounded-xl px-5 whitespace-nowrap font-semibold shadow btn-ripple"
               style={{
                 background: "linear-gradient(90deg, rgb(56,189,248), rgb(59,130,246))",
                 color: "#ffffff",
                 border: 'none',
               }}
             >
-              Mulai Scoring Otomatis
+              {isScoring ? (
+                <span className="inline-flex items-center gap-2">
+                  <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" opacity=".25" strokeWidth="4"/><path d="M21 12a9 9 0 0 1-9 9" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>
+                  Memproses...
+                </span>
+              ) : (
+                'Mulai Scoring Otomatis'
+              )}
             </button>
           </div>
 
           {/* Table */}
-            <div className="glass rounded-2xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden relative">
+              <div className={"scanline " + (isScoring ? 'active' : '')} />
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>

@@ -3,10 +3,20 @@ import AGSVisual from './components/ags-visual';
 export default function Home() {
   return (
     <section id="home" className="relative min-h-[85vh] flex items-center">
-      {/* Decorative background (right glow) */}
+      {/* Decorative gradients: bring back colorful glows */}
+      {/* Left glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute right-[-14rem] top-10 -z-10 h-[680px] w-[680px] rounded-full opacity-30 blur-3xl"
+        className="pointer-events-none absolute left-[-16rem] -top-24 -z-10 h-[760px] w-[760px] rounded-full opacity-40 blur-3xl"
+        style={{
+          background:
+            "conic-gradient(from 120deg at 50% 50%, #0b1220 0deg, #38bdf8 110deg, #3b82f6 220deg, #0b1220 360deg)",
+        }}
+      />
+      {/* Right glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-[-14rem] top-10 -z-10 h-[700px] w-[700px] rounded-full opacity-45 blur-3xl"
         style={{
           background:
             "conic-gradient(from 180deg at 50% 50%, #0b1220 0deg, #3b82f6 120deg, #38bdf8 240deg, #0b1220 360deg)",
@@ -25,7 +35,7 @@ export default function Home() {
 
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">i-Gras</h1>
             <p className="text-soft text-lg leading-relaxed max-w-xl mb-10">
-              Penilaian Cerdas untuk Pembelajaran Efektif melalui Automating Grading System yang mampu memberikan evaluasi objektif, cepat, dan adaptif, sehingga memudahkan pendidik dalam menilai hasil belajar sekaligus membantu peserta didik mendapatkan umpan balik yang tepat waktu untuk meningkatkan kualitas pembelajaran.
+              Penilaian Cerdas untuk Pembelajaran Efektif melalui Automated Grading System yang mampu memberikan evaluasi objektif, cepat, dan adaptif, sehingga memudahkan pendidik dalam menilai hasil belajar sekaligus membantu peserta didik mendapatkan umpan balik yang tepat waktu untuk meningkatkan kualitas pembelajaran.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">

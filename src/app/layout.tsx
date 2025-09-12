@@ -2,20 +2,25 @@ import './globals.css'
 import Navbar from './components/navbar'
 import { AuthProvider } from './components/auth-context'
 import ThemeToggle from './components/theme-toggle'
-import { Poppins } from 'next/font/google'
 import { cookies } from 'next/headers'
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  variable: '--font-poppins',
-})
+import localFont from 'next/font/local'
 
 export const metadata = {
   title: 'i-GraS',
   description: 'Penilaian Cerdas untuk Pembelajaran Efektif',
 }
+
+// Self-hosted Poppins to avoid network fetch during build/runtime
+const poppins = localFont({
+  src: [
+    { path: '../../public/fonts/Poppins/Poppins-Regular.ttf', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/Poppins/Poppins-Medium.ttf',  weight: '500', style: 'normal' },
+    { path: '../../public/fonts/Poppins/Poppins-SemiBold.ttf', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/Poppins/Poppins-Bold.ttf',    weight: '700', style: 'normal' },
+  ],
+  variable: '--font-poppins',
+  display: 'swap',
+})
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Read resolved theme from cookie to align SSR with client

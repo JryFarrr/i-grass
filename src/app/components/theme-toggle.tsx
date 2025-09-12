@@ -17,12 +17,12 @@ export default function ThemeToggle() {
       };
       const cookiePref = (getCookie("themePref") as ThemePref) || "";
       const cookieTheme = (getCookie("theme") as Theme) || "";
-      const savedPref = cookiePref || (localStorage.getItem("themePref") as ThemePref) || (localStorage.getItem("theme") as ThemePref) || "dark";
+      const savedPref = (cookiePref || (localStorage.getItem("themePref") as ThemePref) || (localStorage.getItem("theme") as ThemePref) || "dark") as ThemePref;
       setPref(savedPref);
       const applied = (cookieTheme as Theme) || resolveTheme(savedPref);
       setTheme(applied);
       applyTheme(applied);
-      // Listen system changes when pref is system
+      // Listen system changes when pref is system (backward compatibility only)
       const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
       const onChange = () => {
         if (prefRef.current === "system") {
@@ -67,19 +67,15 @@ export default function ThemeToggle() {
     overlay.className = "theme-fade-overlay";
     document.body.appendChild(overlay);
 
-    // Cycle: dark -> light -> system -> dark
-    const nextPref: ThemePref = pref === "dark" ? "light" : pref === "light" ? "system" : "dark";
-    setPref(nextPref);
-    try { localStorage.setItem("themePref", nextPref); } catch {}
-    const nextTheme = resolveTheme(nextPref);
+    // Toggle only dark <-> light (remove system option)
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+    setPref(nextTheme);
+    try { localStorage.setItem("themePref", nextTheme); } catch {}
     setTheme(nextTheme);
     applyTheme(nextTheme);
-    setCookies(nextPref, nextTheme);
+    setCookies(nextTheme, nextTheme);
 
-    // Remove overlay after animation
-    setTimeout(() => {
-      overlay.remove();
-    }, 260);
+    setTimeout(() => overlay.remove(), 260);
   }
 
   return (
@@ -89,9 +85,18 @@ export default function ThemeToggle() {
       className="fixed left-4 bottom-4 z-50 glass w-12 h-12 rounded-full text-white flex items-center justify-center hover:opacity-90"
       title={theme === "dark" ? "Switch to light" : "Switch to dark"}
     >
-      <span className="text-lg" role="img" aria-hidden>
-        {pref === "system" ? "💻" : theme === "dark" ? "☀" : "🌙"}
-      </span>
+      {theme === "dark" ? (
+        // Sun icon (switch to light)
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M6.76 4.84 4.96 3.05 3.55 4.46l1.79 1.79 1.42-1.41Zm10.48 0 1.41-1.41 1.79 1.79-1.41 1.41-1.79-1.79ZM12 4V1h0v3h0Zm0 19v-3h0v3h0ZM4 12H1v0h3v0Zm19 0h-3v0h3v0ZM6.76 19.16l-1.42 1.41-1.79-1.79 1.42-1.41 1.79 1.79Zm10.48 0 1.79 1.79 1.41-1.41-1.79-1.79-1.41 1.41ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z" />
+        </svg>
+      ) : (
+        // Moon icon (switch to dark)
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+        </svg>
+      )}
     </button>
   );
 }
+

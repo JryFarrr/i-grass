@@ -21,8 +21,9 @@ export default function SignupPage() {
     try {
       await signup(name, email, password);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err?.message || "Gagal mendaftar");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err ?? "");
+      setError(message || "Gagal mendaftar");
     } finally {
       setLoading(false);
     }
@@ -112,4 +113,3 @@ export default function SignupPage() {
     </section>
   );
 }
-

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/auth-context";
 
-type KeyRow = { subject: string; examType: string; uploaded: boolean; fileType?: 'pdf' | 'word' };
+type KeyRow = { subject: string; examType: string; kelas: string; uploaded: boolean; fileType?: 'pdf' | 'word' };
 
 const ALL_STUDENTS = [
   "Aisyah Putri",
@@ -37,9 +37,12 @@ export default function UploadBerkasPage(){
   const inputRef = useRef<HTMLInputElement|null>(null);
 
   const [keyRows, setKeyRows] = useState<KeyRow[]>([
-    { subject: 'Bahasa Indonesia', examType: 'ETS', uploaded: true, fileType: 'pdf' },
-    { subject: 'Penulisan Ilmiah', examType: 'EAS', uploaded: false },
+    { subject: 'Bahasa Indonesia', examType: 'ETS', kelas: 'A', uploaded: true, fileType: 'pdf' },
+    { subject: 'Penulisan Ilmiah', examType: 'EAS', kelas: 'B', uploaded: false },
   ]);
+
+  // drag & drop state
+  const [isDragging, setIsDragging] = useState(false);
 
   function onPick(){ inputRef.current?.click(); }
   function onFiles(files: FileList | null){
@@ -48,13 +51,13 @@ export default function UploadBerkasPage(){
     if (fileKind === 'kunci') {
       setKeyRows(prev => {
         const ext = f.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'word';
-        const i = prev.findIndex(r => r.subject === subject && r.examType === examType);
+        const i = prev.findIndex(r => r.subject === subject && r.examType === examType && r.kelas === kelas);
         if (i >= 0) {
           const next = [...prev];
           next[i] = { ...next[i], uploaded: true, fileType: ext as 'pdf'|'word' };
           return next;
         }
-        return [...prev, { subject, examType, uploaded: true, fileType: ext as 'pdf'|'word' }];
+        return [...prev, { subject, examType, kelas, uploaded: true, fileType: ext as 'pdf'|'word' }];
       });
       alert('Kunci jawaban diupload (dummy).');
     } else {
@@ -156,11 +159,17 @@ export default function UploadBerkasPage(){
               </div>
               <div className="">
                 <label className="block text-sm mb-2">Upload Berkas {fileKind === 'kunci' ? 'PDF/Word' : 'PDF/Word/ZIP'}</label>
-                <div onClick={onPick} className="cursor-pointer glass rounded-2xl p-5 grid place-items-center h-[120px]">
+                <div
+                  onClick={onPick}
+                  onDragOver={(e)=>{ e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={()=> setIsDragging(false)}
+                  onDrop={(e)=>{ e.preventDefault(); setIsDragging(false); onFiles(e.dataTransfer?.files ?? null); }}
+                  className={`cursor-pointer glass rounded-2xl p-5 grid place-items-center h-[120px] transition-colors ${isDragging ? 'ring-2 ring-blue-400 bg-white/10' : ''}`}
+                  >
                   <div className="text-center text-soft">
                     <div className="mb-2 flex items-center justify-center gap-2">
                       <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l4 4h-3v6h-2V7H8l4-4Zm-7 9v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7h-2v7H7v-7H5Z"/></svg>
-                      <span>Click to upload</span>
+                      <span>{isDragging ? 'Lepaskan file di sini' : 'Click atau drag file untuk upload'}</span>
                     </div>
                     <div className="text-xs">{fileKind === 'kunci' ? 'Format: .pdf, .doc, .docx' : 'Format: .pdf, .doc, .docx, .zip'}</div>
                   </div>
@@ -180,6 +189,7 @@ export default function UploadBerkasPage(){
                     <tr className="bg-white/5">
                       <th className="text-left px-4 py-3">Mata Pelajaran</th>
                       <th className="text-left px-4 py-3">Jenis ujian</th>
+                      <th className="text-left px-4 py-3">Kelas</th>
                       <th className="text-left px-4 py-3">Berkas</th>
                       <th className="text-left px-4 py-3">Keterangan</th>
                     </tr>
@@ -189,6 +199,7 @@ export default function UploadBerkasPage(){
                       <tr key={i} className="border-t" style={{ borderColor: 'var(--glass-border)' }}>
                         <td className="px-4 py-2.5">{r.subject}</td>
                         <td className="px-4 py-2.5">{r.examType}</td>
+                        <td className="px-4 py-2.5">{r.kelas}</td>
                         <td className="px-4 py-2.5">
                           {r.uploaded ? (
                             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg btn-glass">

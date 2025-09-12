@@ -4,20 +4,21 @@
 :root {
   --base-bg: #0b0d0f;
   --text: #ffffff;
-  --grid: rgba(255,255,255,0.05);
+  --grid: rgba(255,255,255,0.07);
   --glass-bg: rgba(255,255,255,0.05);
   --glass-border: rgba(255,255,255,0.10);
   --muted: 220 20% 65%;
   --accent: #3b82f6; /* blue-600 */
   /* Blue gradient hues (same for both themes) */
-  --glow-a: rgba(56, 189, 248, 0.10);   /* sky-400 */
-  --glow-b: rgba(59, 130, 246, 0.12);   /* blue-500 */
+  /* Slightly stronger alpha so gradients are more visible */
+  --glow-a: rgba(56, 189, 248, 0.22);   /* sky-400 */
+  --glow-b: rgba(59, 130, 246, 0.26);   /* blue-500 */
 }
 
 .theme-dark {
   --base-bg: #0b0d0f;
   --text: #ffffff;
-  --grid: rgba(255,255,255,0.05);
+  --grid: rgba(255,255,255,0.09);
   --glass-bg: rgba(255,255,255,0.05);
   --glass-border: rgba(255,255,255,0.10);
   --muted: 220 20% 65%;
@@ -27,9 +28,9 @@
 .theme-light {
   --base-bg: #f7fbff;
   --text: #0b1220;
-  --grid: rgba(0,0,0,0.06);
-  --glass-bg: rgba(10,10,10,0.06);
-  --glass-border: rgba(10,10,10,0.10);
+  --grid: rgba(0,0,0,0.08);
+  --glass-bg: rgba(10,10,10,0.04);
+  --glass-border: rgba(10,10,10,0.08);
   --muted: 220 15% 35%;
   --accent: #2563eb; /* slightly darker in light */
 }
@@ -38,13 +39,27 @@ html, body {
   height: 100%;
 }
 
+/* Prevent rubber-banding/overscroll glow and background gaps */
+html {
+  background: var(--base-bg);
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background:
-    radial-gradient(1200px 600px at 10% 10%, var(--glow-a), transparent 60%),
-    radial-gradient(900px 500px at 85% 20%, var(--glow-b), transparent 60%),
+    radial-gradient(1200px 680px at 10% 14%, var(--glow-a), transparent 68%),
+    radial-gradient(980px 560px at 86% 18%, var(--glow-b), transparent 68%),
+    radial-gradient(1100px 620px at 60% 78%, color-mix(in oklab, var(--glow-a) 60%, var(--glow-b) 40%), transparent 70%),
     var(--base-bg);
+  background-attachment: fixed, fixed, fixed, fixed; /* lock layers to viewport */
+  background-repeat: no-repeat;
+  overflow-x: hidden;
+  min-height: 100dvh;
+  overscroll-behavior: none;
   transition: background-color .35s ease, color .25s ease;
 }
 
@@ -59,8 +74,23 @@ body::before {
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: -1px -1px;
-  opacity: .25;
+  opacity: .28;
   z-index: 0;
+}
+
+/* Subtle bottom fade so the background blends into footer without gaps */
+body::after {
+  content: '';
+  position: fixed;
+  left: 0; right: 0; bottom: 0; height: 220px;
+  pointer-events: none;
+  z-index: 0;
+}
+.theme-dark body::after {
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.28) 100%);
+}
+.theme-light body::after {
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 100%);
 }
 
 /* Reusable utilities (no plugin needed) */
@@ -175,4 +205,18 @@ body::before {
 /* Improve contrast for the closed control in dark */
 .theme-dark select {
   color: #ffffff;
+}
+
+/* Button ripple effect */
+.btn-ripple { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(.2);
+  animation: ripple .6s ease-out forwards;
+  background: rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { transform: scale(3); opacity: 0; }
 }

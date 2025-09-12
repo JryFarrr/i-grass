@@ -22,8 +22,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push("/");
-    } catch (err: any) {
-      setError(err?.message || "Gagal masuk");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err ?? "");
+      setError(message || "Gagal masuk");
     } finally {
       setLoading(false);
     }

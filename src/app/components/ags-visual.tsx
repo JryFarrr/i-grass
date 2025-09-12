@@ -6,7 +6,8 @@ import Image from "next/image";
 export default function AGSVisual() {
   const ref = useRef<HTMLDivElement>(null);
   const [grading, setGrading] = useState(false);
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [spots, setSpots] = useState<{ left: number; top: number }[]>([]);
 
   useEffect(() => {
     const el = ref.current;
@@ -24,6 +25,76 @@ export default function AGSVisual() {
     };
   }, []);
 
+  // Generate random non-overlapping spots for 5 chips inside container
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+
+    const gen = () => {
+      const rect = root.getBoundingClientRect();
+      const W = rect.width;
+      const H = rect.height;
+      const pad = 16; // padding from edges
+      const minDist = 120; // min distance between chips (px)
+      const CHIP_W = 140; // approximate chip size for collision checks
+      const CHIP_H = 32;
+
+      // Measure the logo hotspot rect (avoid placing chips on top of it)
+      const logo = document.getElementById('logo-hotspot');
+      let avoid: { left: number; top: number; right: number; bottom: number } | null = null;
+      if (logo) {
+        const lr = logo.getBoundingClientRect();
+        avoid = {
+          left: Math.max(0, lr.left - rect.left) - 12,
+          top: Math.max(0, lr.top - rect.top) - 12,
+          right: Math.min(W, lr.right - rect.left) + 12,
+          bottom: Math.min(H, lr.bottom - rect.top) + 12,
+        };
+      }
+      const pts: { left: number; top: number }[] = [];
+
+      function ok(x: number, y: number) {
+        // keep inside bounds
+        if (x < pad || x > W - pad - CHIP_W) return false;
+        if (y < pad || y > H - pad - CHIP_H) return false;
+        // avoid the logo rectangle area
+        if (avoid) {
+          const r1 = { left: x, top: y, right: x + CHIP_W, bottom: y + CHIP_H };
+          const overlap = !(r1.right < avoid.left || r1.left > avoid.right || r1.bottom < avoid.top || r1.top > avoid.bottom);
+          if (overlap) return false;
+        }
+        // keep distance from others
+        for (const p of pts) {
+          if (Math.hypot((x + CHIP_W/2) - (p.left + CHIP_W/2), (y + CHIP_H/2) - (p.top + CHIP_H/2)) < minDist) return false;
+        }
+        return true;
+      }
+
+      for (let i = 0; i < 5; i++) {
+        let placed = false;
+        for (let t = 0; t < 200 && !placed; t++) {
+          // bias to lower-right slightly for aesthetics
+          const x = pad + Math.random() * (W - pad * 2 - CHIP_W);
+          const y = pad + Math.random() * (H - pad * 2 - CHIP_H);
+          if (ok(x, y)) {
+            pts.push({ left: Math.round(x), top: Math.round(y) });
+            placed = true;
+          }
+        }
+        if (!placed) {
+          // fallback: stack along bottom-left with spacing
+          pts.push({ left: pad + i * 110, top: Math.max(pad, H - pad - CHIP_H) });
+        }
+      }
+      setSpots(pts);
+    };
+
+    gen();
+    const onResize = () => gen();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   return (
     <div ref={ref} className="relative min-h-[420px] h-[55vh] select-none">
       {/* IGrass logo hotspot triggers grading on hover (centered, responsive, offset via CSS vars) */}
@@ -33,10 +104,10 @@ export default function AGSVisual() {
         timerRef.current = setTimeout(() => setGrading(false), 2200);
       }} />
 
-      {/* Jawaban essai to grade (boxes removed as requested) */}
-      <ChipEssay index={0} grading={grading} style={{ left: 0, bottom: 20 }} />
-      <ChipEssay index={1} grading={grading} style={{ left: 40, bottom: 90 }} />
-      <ChipEssay index={2} grading={grading} style={{ left: 90, bottom: 10 }} />
+      {/* Jawaban essai (5 chips) dengan posisi acak non-overlap */}
+      {spots.map((p, i) => (
+        <ChipEssay key={i} index={i} grading={grading} style={{ left: p.left, top: p.top }} />
+      ))}
     </div>
   );
 }
@@ -49,7 +120,10 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
 
   // Drive per-chip grading sequence with small delays per index
   useEffect(() => {
-    let delayT: any; let progI: any; let finalizeT: any; let resetT: any;
+    let delayT: ReturnType<typeof setTimeout> | undefined;
+    let progI: ReturnType<typeof setInterval> | undefined;
+    let finalizeT: ReturnType<typeof setTimeout> | undefined;
+    let resetT: ReturnType<typeof setTimeout> | undefined;
     if (grading) {
       delayT = setTimeout(() => {
         setPhase("grading");
@@ -62,7 +136,7 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
           const p = Math.min(100, Math.round(((Date.now() - start) / duration) * 100));
           setProgress(p);
           if (p >= 100) {
-            clearInterval(progI);
+            if (progI !== undefined) clearInterval(progI);
           }
         }, 60);
         finalizeT = setTimeout(() => {
@@ -72,7 +146,12 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
     } else {
       resetT = setTimeout(() => { setPhase("idle"); setProgress(0); }, 500);
     }
-    return () => { clearTimeout(delayT); clearInterval(progI); clearTimeout(finalizeT); clearTimeout(resetT); };
+    return () => {
+      if (delayT !== undefined) clearTimeout(delayT);
+      if (progI !== undefined) clearInterval(progI);
+      if (finalizeT !== undefined) clearTimeout(finalizeT);
+      if (resetT !== undefined) clearTimeout(resetT);
+    };
   }, [grading, index]);
 
   const onEnter = () => setHovered(true);

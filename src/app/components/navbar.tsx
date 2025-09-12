@@ -36,11 +36,11 @@ export default function Navbar() {
   }, []);
 
   // Auth pages: render a simple top bar with logo + brand
-  if (pathname === '/auth/login' || pathname?.startsWith('/dashboard')) {
+  if (pathname === '/auth/login' || pathname === '/auth/signup' || pathname?.startsWith('/dashboard')) {
     return (
       <header className="fixed top-0 inset-x-0 z-50">
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-3 flex items-center justify-between glass rounded-b-2xl">
-          <Link href="/" className="nav-link text-[22px] md:text-2xl font-semibold tracking-wide">Igrass</Link>
+          <Link href="/" className="nav-link text-[22px] md:text-2xl font-semibold tracking-wide">i-Gras</Link>
           <span className="text-soft text-sm">Selamat Datang</span>
         </div>
       </header>
