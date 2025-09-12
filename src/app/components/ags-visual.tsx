@@ -203,9 +203,10 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
 function LogoHotspot({ onTrigger }: { onTrigger: () => void }) {
   const [fallback, setFallback] = useState(false);
   // Use your own file: detected my-project/public/logo-igrass.svg
-  const src = "/logo-igras"; // must start with '/' to load from /public
+  const src = "/logo-igrass.png"; // served from /public
   return (
     <div
+      id="logo-hotspot"
       className="logo-hotspot absolute left-1/2 top-1/2 grid place-items-center cursor-pointer text-blue-400 parallax glass rounded-[28px] sm:rounded-[32px]"
       style={{
         transform:
