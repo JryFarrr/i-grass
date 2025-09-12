@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Theme = "dark" | "light";
 type ThemePref = Theme | "system";
@@ -8,6 +8,9 @@ type ThemePref = Theme | "system";
 export default function ThemeToggle() {
   const [pref, setPref] = useState<ThemePref>("dark");
   const [theme, setTheme] = useState<Theme>("dark");
+  // Keep a ref of pref for the matchMedia listener
+  const prefRef = useRef<ThemePref>(pref);
+  useEffect(() => { prefRef.current = pref; }, [pref]);
 
   useEffect(() => {
     try {
@@ -35,11 +38,7 @@ export default function ThemeToggle() {
       if (mq) mq.addEventListener?.("change", onChange);
       return () => { if (mq) mq.removeEventListener?.("change", onChange); };
     } catch {}
-  }, []);
-
-  // Keep a ref of pref for listener
-  const prefRef = { current: pref } as { current: ThemePref };
-  useEffect(() => { prefRef.current = pref; }, [pref]);
+  }, [prefRef]);
 
   function resolveTheme(p: ThemePref): Theme {
     if (p === "system") {
@@ -99,4 +98,3 @@ export default function ThemeToggle() {
     </button>
   );
 }
-

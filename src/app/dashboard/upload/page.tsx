@@ -114,7 +114,14 @@ export default function UploadBerkasPage(){
               <div>
                 <label className="block text-sm mb-2">Jenis file</label>
                 <div className="relative">
-                  <select value={fileKind} onChange={e=>setFileKind(e.target.value as any)} className="w-full appearance-none rounded-xl bg-transparent border px-4 py-2.5 pr-9 outline-none focus:border-blue-500" style={{ borderColor: "var(--glass-border)" }}>
+                  <select
+                    value={fileKind}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setFileKind(e.target.value as 'kunci' | 'jawaban')
+                    }
+                    className="w-full appearance-none rounded-xl bg-transparent border px-4 py-2.5 pr-9 outline-none focus:border-blue-500"
+                    style={{ borderColor: "var(--glass-border)" }}
+                  >
                     <option value="kunci">Kunci Jawaban</option>
                     <option value="jawaban">Jawaban Mahasiswa</option>
                   </select>
