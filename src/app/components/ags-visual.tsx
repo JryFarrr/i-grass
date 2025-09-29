@@ -163,9 +163,11 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
     <div
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      className={`chip-paper glass`}
+      className={`chip-paper glass float-slow`}
       style={{
         ...(style || {}),
+        // Stagger each chip slightly so floats feel organic
+        animationDelay: `${index * 0.35}s`,
       }}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -203,7 +205,7 @@ function ChipEssay({ index, grading, style }: { index: number; grading: boolean;
 function LogoHotspot({ onTrigger }: { onTrigger: () => void }) {
   const [fallback, setFallback] = useState(false);
   // Use your own file: detected my-project/public/logo-igrass.svg
-  const src = "/logo-igras"; // must start with '/' to load from /public
+  const src = "/logo-igrass.png"; // must start with '/' to load from /public
   return (
     <div
       className="logo-hotspot absolute left-1/2 top-1/2 grid place-items-center cursor-pointer text-blue-400 parallax glass rounded-[28px] sm:rounded-[32px]"
@@ -219,7 +221,7 @@ function LogoHotspot({ onTrigger }: { onTrigger: () => void }) {
     >
       <div className="relative w-full h-full" role="img" aria-label="Logo I-GraS">
         {fallback ? (
-          <svg viewBox="0 0 48 48" aria-hidden className="w-full h-full">
+          <svg viewBox="0 0 48 48" aria-hidden className="w-full h-full origin-center scale-[0.82] md:scale-[0.86]">
             <circle cx="33" cy="9.5" r="3.2" fill="currentColor" />
             <path d="M16 10c1.8-1.4 4.5-1 5.9.8l6.6 8.6-6 4.6-6.5-8.6C14.6 14.2 14.9 11.3 16 10Z" fill="currentColor"/>
             <path d="M36 28 21.7 38.6c-.4.3-.9.5-1.3.6l-6.7 1.2 2.2-6.4c.2-.5.5-1 .9-1.3L31 21l5 7Z" fill="currentColor"/>
@@ -230,7 +232,7 @@ function LogoHotspot({ onTrigger }: { onTrigger: () => void }) {
             alt="Logo I-GraS"
             fill
             sizes="(min-width: 1280px) 560px, (min-width: 1024px) 520px, (min-width: 768px) 480px, 320px"
-            className="object-contain bg-transparent"
+            className="object-contain bg-transparent origin-center scale-[0.82] md:scale-[0.86]"
             priority
             onError={() => setFallback(true)}
           />
@@ -239,3 +241,18 @@ function LogoHotspot({ onTrigger }: { onTrigger: () => void }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

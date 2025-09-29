@@ -1,8 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Session } from "../../app/lib/auth";
-import { clearSession, getSession, login as loginFn, seedDefaultUser, signup as signupFn } from "../../app/lib/auth";
+import type { Session } from "../lib/auth-types";
 
 type AuthContextType = {
   user: Session;
@@ -13,6 +12,55 @@ type AuthContextType = {
   loginWithGoogle: () => Promise<void>;
 };
 
+type SessionResponse = { user: Session };
+type AuthSuccessResponse = { user: Exclude<Session, null> };
+
+type JsonError = { error?: unknown };
+
+async function fetchJson<T>(input: string, init: RequestInit = {}): Promise<T> {
+  const config: RequestInit = {
+    credentials: "include",
+    ...init,
+  };
+
+  const headers = new Headers(init.headers as HeadersInit | undefined);
+  if (config.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (headers.size > 0) {
+    config.headers = headers;
+  }
+
+  const response = await fetch(input, config);
+  let data: unknown = null;
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  if (isJson) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message = extractErrorMessage(data);
+    throw new Error(message);
+  }
+
+  return (data ?? {}) as T;
+}
+
+function extractErrorMessage(payload: unknown) {
+  if (payload && typeof payload === "object" && "error" in payload) {
+    const { error } = payload as JsonError;
+    if (typeof error === "string" && error.trim().length > 0) {
+      return error;
+    }
+  }
+  return "Terjadi kesalahan";
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -20,10 +68,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Seed demo user once
-    seedDefaultUser();
-    setUser(getSession());
-    setLoading(false);
+    let active = true;
+    async function loadSession() {
+      try {
+        const data = await fetchJson<SessionResponse>("/api/auth/session", { cache: "no-store" });
+        if (!active) return;
+        setUser(data.user ?? null);
+      } catch {
+        if (!active) return;
+        setUser(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadSession();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const value = useMemo<AuthContextType>(
@@ -31,21 +93,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       loading,
       async login(email: string, password: string) {
-        loginFn(email, password);
-        setUser(getSession());
+        const data = await fetchJson<AuthSuccessResponse>("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+        setUser(data.user);
       },
       async signup(name: string, email: string, password: string) {
-        signupFn(name, email, password);
-        setUser(getSession());
+        const data = await fetchJson<AuthSuccessResponse>("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ name, email, password }),
+        });
+        setUser(data.user);
       },
       logout() {
-        clearSession();
+        fetchJson("/api/auth/logout", { method: "POST" }).catch(() => undefined);
         setUser(null);
       },
       async loginWithGoogle() {
-        const { loginWithGoogle } = await import("../../app/lib/auth");
-        loginWithGoogle();
-        setUser(getSession());
+        const data = await fetchJson<AuthSuccessResponse>("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email: "demo@igras.app", password: "igras123" }),
+        });
+        setUser(data.user);
       },
     }),
     [user, loading]
@@ -59,3 +129,5 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
   return ctx;
 }
+
+
