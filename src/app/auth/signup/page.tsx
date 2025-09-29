@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useAuth } from "../../components/auth-context";
 
 export default function SignupPage() {
@@ -68,7 +68,7 @@ export default function SignupPage() {
             type="text"
             required
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
             className="w-full mb-4 rounded-xl bg-transparent border px-4 py-2.5 outline-none focus:border-blue-500"
             style={{ borderColor: "var(--glass-border)" }}
             placeholder="Nama Anda"
@@ -79,7 +79,7 @@ export default function SignupPage() {
             type="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
             className="w-full mb-4 rounded-xl bg-transparent border px-4 py-2.5 outline-none focus:border-blue-500"
             style={{ borderColor: "var(--glass-border)" }}
             placeholder="nama@domain.com"
@@ -90,7 +90,7 @@ export default function SignupPage() {
             type="password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
             className="w-full mb-6 rounded-xl bg-transparent border px-4 py-2.5 outline-none focus:border-blue-500"
             style={{ borderColor: "var(--glass-border)" }}
             placeholder="Minimal 6 karakter"
