@@ -27,9 +27,7 @@ async function fetchJson<T>(input: string, init: RequestInit = {}): Promise<T> {
   if (config.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (headers.size > 0) {
-    config.headers = headers;
-  }
+  config.headers = headers;
 
   const response = await fetch(input, config);
   let data: unknown = null;
