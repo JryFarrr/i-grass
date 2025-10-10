@@ -3,12 +3,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
-import { useAuth } from "../../components/auth-context";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useAuth, getLandingPathForRole } from "../../components/auth-context";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      router.replace(getLandingPathForRole(user.role));
+    }
+  }, [authLoading, user, router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -122,11 +129,25 @@ function GoogleButton() {
   const { loginWithGoogle } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const authenticated = await loginWithGoogle();
+      router.push(getLandingPathForRole(authenticated.role));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <button
       type="button"
-      onClick={async()=>{ setLoading(true); try{ await loginWithGoogle(); router.push('/'); } finally { setLoading(false); } }}
-      className="w-full h-12 rounded-xl flex items-center justify-center gap-3 border transition-colors"
+      onClick={handleClick}
+      disabled={loading}
+      className="w-full h-12 rounded-xl flex items-center justify-center gap-3 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       style={{
         borderColor: "color-mix(in oklab, var(--accent) 60%, var(--glass-border))",
         background: "color-mix(in oklab, var(--accent) 8%, transparent)",
@@ -138,7 +159,8 @@ function GoogleButton() {
         <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.197l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.552,5.047C9.505,39.556,16.227,44,24,44z"/>
         <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.094,5.565 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
       </svg>
-      <span>{loading ? 'Menghubungkan...' : 'Lanjutkan dengan Google'}</span>
+      <span>{loading ? "Menghubungkan..." : "Lanjutkan dengan Google"}</span>
     </button>
   );
 }
+

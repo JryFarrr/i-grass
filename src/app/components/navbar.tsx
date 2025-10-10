@@ -35,6 +35,10 @@ export default function Navbar() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  if (pathname?.startsWith('/exam')) {
+    return null;
+  }
+
   // Auth pages: render a simple top bar with logo + brand
   if (pathname === '/auth/login' || pathname === '/auth/signup' || pathname?.startsWith('/dashboard')) {
     return (
@@ -72,10 +76,29 @@ export default function Navbar() {
             </button>
             {open && (
               <div className="absolute right-0 mt-2 min-w-[180px] glass rounded-xl p-2">
-                <button onClick={()=>{ setOpen(false); router.push('/dashboard'); }} className="w-full text-left px-3 py-2 rounded-lg nav-link hover:nav-pill-active flex items-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg>
-                  Dashboard
-                </button>
+                {user.role === "admin" ? (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      router.push('/dashboard');
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg nav-link hover:nav-pill-active flex items-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg>
+                    Dashboard
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      router.push('/exam');
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg nav-link hover:nav-pill-active flex items-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14a1 1 0 0 1 1 1v3h-2V6H6v12h12v-2h2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm6 4 4 4-4 4v-3H8v-2h3Z"/></svg>
+                    Mulai Ujian
+                  </button>
+                )}
                 <button onClick={()=>{ setOpen(false); logout(); router.push('/'); }} className="w-full text-left px-3 py-2 rounded-lg nav-link hover:nav-pill-active flex items-center gap-2">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 17v2H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5v2H6v10zM14 7l5 5-5 5v-3h-4v-4h4z"/></svg>
                   Keluar
@@ -90,3 +113,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

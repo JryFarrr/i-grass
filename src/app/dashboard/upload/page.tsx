@@ -27,7 +27,16 @@ const CLASSES = ['A','B','C'];
 export default function UploadBerkasPage(){
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  useEffect(()=>{ if(!loading && !user) router.replace('/auth/login'); },[loading,user,router]);
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      router.replace('/auth/login');
+      return;
+    }
+    if (user.role !== 'admin') {
+      router.replace('/exam');
+    }
+  }, [loading, user, router]);
 
   const [fileKind, setFileKind] = useState<'kunci'|'jawaban'>('kunci');
   const [subject, setSubject] = useState(SUBJECTS[0]);
@@ -68,7 +77,10 @@ export default function UploadBerkasPage(){
 
   const accept = useMemo(() => fileKind === 'kunci' ? '.pdf,.doc,.docx' : '.pdf,.doc,.docx,.zip', [fileKind]);
 
-  if (!user) return null;
+
+  if (loading || !user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <section className="px-6 md:px-10 pb-10">

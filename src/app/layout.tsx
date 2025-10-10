@@ -1,5 +1,6 @@
 import './globals.css'
 import Navbar from './components/navbar'
+import MainWrapper from './components/main-wrapper'
 import { AuthProvider } from './components/auth-context'
 import ThemeToggle from './components/theme-toggle'
 import { cookies } from 'next/headers'
@@ -39,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <AuthProvider>
           <Navbar />
-          <main className="pt-28">{children}</main>
+          <MainWrapper>{children}</MainWrapper>
           <ThemeToggle />
         </AuthProvider>
       </body>

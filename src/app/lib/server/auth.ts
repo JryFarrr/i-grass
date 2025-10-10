@@ -1,7 +1,7 @@
-﻿import { promises as fs } from "fs";
+import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
-import type { PublicUser } from "../auth-types";
+import type { PublicUser, UserRole } from "../auth-types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
@@ -16,6 +16,7 @@ export type StoredUser = {
   passwordHash: string;
   salt: string;
   createdAt: string;
+  role: UserRole;
 };
 
 type SessionPayload = {
@@ -51,16 +52,45 @@ async function loadUsers(): Promise<StoredUser[]> {
   try {
     const data = JSON.parse(raw) as unknown;
     if (!Array.isArray(data)) return [];
-    return data.filter(
-      (item): item is StoredUser =>
-        typeof item === "object" &&
-        item !== null &&
-        "email" in item &&
-        "passwordHash" in (item as Record<string, unknown>)
-    );
+    const users: StoredUser[] = [];
+    for (const item of data) {
+      const user = parseStoredUser(item);
+      if (user) users.push(user);
+    }
+    return users;
   } catch {
     return [];
   }
+}
+
+function normalizeRole(value: unknown): UserRole {
+  return value === "admin" ? "admin" : "user";
+}
+
+function parseStoredUser(item: unknown): StoredUser | null {
+  if (typeof item !== "object" || item === null) return null;
+  const record = item as Record<string, unknown>;
+  const { id, name, email, passwordHash, salt, createdAt } = record;
+  if (
+    typeof id !== "string" ||
+    typeof name !== "string" ||
+    typeof email !== "string" ||
+    typeof passwordHash !== "string" ||
+    typeof salt !== "string" ||
+    typeof createdAt !== "string"
+  ) {
+    return null;
+  }
+  const roleValue = (record as { role?: unknown }).role;
+  return {
+    id,
+    name,
+    email,
+    passwordHash,
+    salt,
+    createdAt,
+    role: normalizeRole(roleValue),
+  };
 }
 
 async function saveUsers(users: StoredUser[]) {
@@ -74,8 +104,8 @@ function normalizeEmail(email: string) {
 }
 
 function sanitizeUser(user: StoredUser): PublicUser {
-  const { id, name, email, createdAt } = user;
-  return { id, name, email, createdAt };
+  const { id, name, email, createdAt, role } = user;
+  return { id, name, email, createdAt, role };
 }
 
 function hashPassword(password: string, salt: string) {
@@ -104,7 +134,7 @@ export async function findUserById(id: string): Promise<StoredUser | undefined> 
   return users.find((user) => user.id === id);
 }
 
-export async function createUser(name: string, email: string, password: string): Promise<PublicUser> {
+export async function createUser(name: string, email: string, password: string, role: UserRole = "user"): Promise<PublicUser> {
   if (!name.trim()) throw new Error("Nama wajib diisi");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Format email tidak valid");
   if (password.length < 6) throw new Error("Password minimal 6 karakter");
@@ -124,6 +154,7 @@ export async function createUser(name: string, email: string, password: string):
     passwordHash,
     salt,
     createdAt: new Date().toISOString(),
+    role,
   };
 
   users.push(user);
@@ -221,9 +252,16 @@ export function buildClearSessionCookie() {
 }
 
 export async function ensureDemoUser() {
-  const existing = await findUserByEmail("demo@igras.app");
-  if (!existing) {
-    await createUser("Pengguna Demo", "demo@igras.app", "igras123");
+  const users = await loadUsers();
+  const normalized = normalizeEmail("demo@igras.app");
+  const index = users.findIndex((user) => normalizeEmail(user.email) === normalized);
+  if (index === -1) {
+    await createUser("Pengguna Demo", "demo@igras.app", "igras123", "admin");
+    return;
+  }
+  if (users[index].role !== "admin") {
+    users[index] = { ...users[index], role: "admin" };
+    await saveUsers(users);
   }
 }
 
