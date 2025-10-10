@@ -1,19 +1,24 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Session } from "../lib/auth-types";
+import type { Session, UserRole } from "../lib/auth-types";
 
+export function getLandingPathForRole(role: UserRole) {
+  return role === "admin" ? "/dashboard" : "/exam";
+}
+
+type AuthenticatedUser = NonNullable<Session>;
 type AuthContextType = {
   user: Session;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthenticatedUser>;
+  signup: (name: string, email: string, password: string) => Promise<AuthenticatedUser>;
   logout: () => void;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => Promise<AuthenticatedUser>;
 };
 
 type SessionResponse = { user: Session };
-type AuthSuccessResponse = { user: Exclude<Session, null> };
+type AuthSuccessResponse = { user: AuthenticatedUser };
 
 type JsonError = { error?: unknown };
 
@@ -96,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ email, password }),
         });
         setUser(data.user);
+        return data.user;
       },
       async signup(name: string, email: string, password: string) {
         const data = await fetchJson<AuthSuccessResponse>("/api/auth/register", {
@@ -103,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ name, email, password }),
         });
         setUser(data.user);
+        return data.user;
       },
       logout() {
         fetchJson("/api/auth/logout", { method: "POST" }).catch(() => undefined);
@@ -114,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ email: "demo@igras.app", password: "igras123" }),
         });
         setUser(data.user);
+        return data.user;
       },
     }),
     [user, loading]
@@ -127,5 +135,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
   return ctx;
 }
-
 

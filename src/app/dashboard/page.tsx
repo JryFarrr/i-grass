@@ -25,7 +25,14 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/auth/login");
+    if (loading) return;
+    if (!user) {
+      router.replace("/auth/login");
+      return;
+    }
+    if (user.role !== "admin") {
+      router.replace("/exam");
+    }
   }, [loading, user, router]);
 
   const [subject, setSubject] = useState("Bahasa Indonesia");
@@ -151,7 +158,9 @@ export default function DashboardPage() {
     w.print();
   }
 
-  if (!user) return null;
+  if (loading || !user || user.role !== "admin") {
+    return null;
+  }
 
   return (
     <section className="px-6 md:px-10 pb-10">

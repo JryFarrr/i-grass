@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState } from "react";
-import { useAuth } from "../../components/auth-context";
+import { FormEvent, useEffect, useState } from "react";
+import { useAuth, getLandingPathForRole } from "../../components/auth-context";
 
 export default function SignupPage() {
-  const { signup } = useAuth();
+  const { signup, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      router.replace(getLandingPathForRole(user.role));
+    }
+  }, [authLoading, user, router]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,8 +25,8 @@ export default function SignupPage() {
     setError(null);
     setLoading(true);
     try {
-      await signup(name, email, password);
-      router.push("/dashboard");
+      const registered = await signup(name, email, password);
+      router.push(getLandingPathForRole(registered.role));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err ?? "");
       setError(message || "Gagal mendaftar");
@@ -113,3 +119,4 @@ export default function SignupPage() {
     </section>
   );
 }
+
