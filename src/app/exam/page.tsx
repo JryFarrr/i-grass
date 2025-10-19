@@ -47,6 +47,7 @@ const QUESTIONS: Question[] = [
 ];
 
 const QUESTION_IDS = Array.from({ length: 30 }, (_, idx) => idx + 1);
+const EXAM_DURATION_SECONDS = 60 * 60;
 
 const STATUS_STYLES: Record<QuestionStatus, string> = {
   answered: "border-emerald-300 bg-emerald-100 text-emerald-700",
@@ -64,6 +65,11 @@ const LEGEND: Array<{ status: QuestionStatus; label: string; dotClass: string }>
   { status: "markedAndAnswered", label: "Answered & Marked", dotClass: "bg-blue-500" },
 ];
 
+function roundToHalfBand(value: number) {
+  const clamped = Math.max(0, Math.min(9, value));
+  return Math.round(clamped * 2) / 2;
+}
+
 export default function ExamPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -72,7 +78,7 @@ export default function ExamPage() {
   const [statuses, setStatuses] = useState<QuestionStatus[]>(() =>
     QUESTION_IDS.map((_, idx) => (idx === 0 ? "notAnswered" : "notVisited"))
   );
-  const [secondsLeft, setSecondsLeft] = useState(60 * 60 - 50);
+  const [secondsLeft, setSecondsLeft] = useState(EXAM_DURATION_SECONDS - 50);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
@@ -192,10 +198,58 @@ export default function ExamPage() {
   }
 
   function submitPaper() {
-    setSubmitted(true);
-    setStatuses((prev) =>
-      prev.map((status) => (status === "notVisited" ? "notAnswered" : status))
+    const normalizedStatuses = statuses.map((status, idx) => {
+      const visitedStatus = ensureVisited(idx, status);
+      return computeStatus(idx, visitedStatus, responses[idx] ?? "");
+    });
+
+    const totalCount = QUESTION_IDS.length;
+    const answeredCount = normalizedStatuses.filter(
+      (status) => status === "answered" || status === "markedAndAnswered"
+    ).length;
+    const markedTotal = normalizedStatuses.filter(
+      (status) => status === "marked" || status === "markedAndAnswered"
+    ).length;
+    const skippedCount = Math.max(0, totalCount - answeredCount);
+    const maxScore = totalCount * 10;
+    const score = answeredCount * 10;
+    const timeTakenSeconds = Math.max(0, EXAM_DURATION_SECONDS - secondsLeft);
+    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+
+    const baseBand = percentage > 0 ? (percentage / 100) * 9 : 0;
+    const taskAchievement = roundToHalfBand(baseBand);
+    const coherenceAndCohesion = roundToHalfBand(
+      baseBand - (skippedCount > 0 ? Math.min(1.5, skippedCount / totalCount) : 0)
     );
+    const lexicalResource = roundToHalfBand(baseBand - (markedTotal > totalCount * 0.2 ? 0.5 : 0.25));
+    const grammaticalRange = roundToHalfBand(
+      baseBand - (answeredCount < totalCount * 0.6 ? 0.75 : totalCount > 0 ? 0.25 : 0)
+    );
+    const overallBand = roundToHalfBand(
+      (taskAchievement + coherenceAndCohesion + lexicalResource + grammaticalRange) / 4
+    );
+
+    setSubmitted(true);
+    setStatuses(normalizedStatuses);
+
+    const params = new URLSearchParams({
+      total: String(totalCount),
+      attempted: String(answeredCount),
+      marked: String(markedTotal),
+      skipped: String(skippedCount),
+      score: String(score),
+      maxScore: String(maxScore),
+      timeTaken: String(timeTakenSeconds),
+      duration: String(EXAM_DURATION_SECONDS),
+      percentage: String(Math.round(percentage)),
+      ta: taskAchievement.toString(),
+      cc: coherenceAndCohesion.toString(),
+      lr: lexicalResource.toString(),
+      gr: grammaticalRange.toString(),
+      band: overallBand.toString(),
+    });
+
+    router.push(`/exam/score?${params.toString()}`);
   }
 
   function formatTime(seconds: number) {
