@@ -160,7 +160,12 @@ export default function ExamScorePage() {
     <section className="relative min-h-screen bg-slate-100 px-4 pb-12 pt-8">
       <div className="mx-auto max-w-5xl">
         <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_32px_80px_rgba(15,23,42,0.12)]">
-          <header className="bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-8 py-10 text-white">
+          <header
+            className="px-8 py-10 text-white"
+            style={{
+              background: "linear-gradient(90deg, rgb(56,189,248) 0%, rgb(59,130,246) 60%, rgb(37,99,235) 100%)",
+            }}
+          >
             <p className="text-xs uppercase tracking-[0.35em] text-blue-100">Hasil Penilaian</p>
             <h1 className="mt-3 text-3xl font-semibold">Selamat, {firstName}!</h1>
             <p className="mt-4 max-w-2xl text-sm text-blue-100">
@@ -170,30 +175,36 @@ export default function ExamScorePage() {
 
           <div className="space-y-10 px-8 pb-10 pt-8">
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-3xl border border-blue-100 bg-blue-50/80 p-6 shadow-sm lg:col-span-2">
+              <div className="rounded-3xl border border-sky-100 bg-sky-50/80 p-6 shadow-sm lg:col-span-2">
                 <div className="flex flex-wrap items-end justify-between gap-6">
                   <div>
-                    <p className="text-sm font-medium text-blue-700">Total Skor</p>
-                    <p className="mt-3 text-5xl font-bold text-blue-900">{metrics.score}</p>
-                    <p className="text-sm text-blue-600">
+                    <p className="text-sm font-medium text-sky-700">Total Skor</p>
+                    <p className="mt-3 text-5xl font-bold text-slate-900">{metrics.score}</p>
+                    <p className="text-sm text-sky-600">
                       dari {metrics.maxScore} poin | {metrics.percentage}% tercapai
                     </p>
                   </div>
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-blue-200 bg-white text-xl font-semibold text-blue-700 shadow-inner">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-sky-200 bg-white text-xl font-semibold text-sky-700 shadow-inner">
                     {metrics.percentage}%
                   </div>
                 </div>
                 <div className="mt-6">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-blue-200">
-                    <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: progressWidth }} />
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-sky-200">
+                    <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: progressWidth }} />
                   </div>
-                  <p className="mt-2 text-xs text-blue-600">
+                  <p className="mt-2 text-xs text-sky-600">
                     Target minimal 70% {metrics.percentage >= 70 ? "sudah" : "belum"} tercapai.
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-500 via-purple-500/90 to-indigo-600 p-6 text-white shadow-sm">
+              <div
+                className="rounded-3xl border border-sky-100 p-6 text-white shadow-sm"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(56,189,248,0.95) 0%, rgba(59,130,246,0.95) 55%, rgba(37,99,235,0.95) 100%)",
+                }}
+              >
                 <p className="text-xs uppercase tracking-[0.3em] text-white/70">Skor Karakteristik</p>
                 <p className="mt-3 text-3xl font-semibold">Band {metrics.overallBand.toFixed(1)}</p>
                 <p className="mt-4 text-sm text-white/80">
@@ -206,7 +217,7 @@ export default function ExamScorePage() {
                         <span className="text-white/80">{item.label}</span>
                         <span className="font-semibold text-white">{item.score.toFixed(1)}</span>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-white/20">
+                      <div className="mt-2 h-2 w-full rounded-full bg-white/30">
                         <div
                           className="h-full rounded-full bg-white"
                           style={{
