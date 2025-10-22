@@ -4,50 +4,10 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../components/auth-context";
+import { supabase , Question } from "../lib/supabase/client";
+import { clear } from "console";
 
 type QuestionStatus = "answered" | "notAnswered" | "notVisited" | "marked" | "markedAndAnswered";
-
-type Question = {
-  id: number;
-  section: string;
-  type: string;
-  title: string;
-  prompt: string[];
-};
-
-const QUESTIONS: Question[] = [
-  {
-    id: 21,
-    section: "Quantitative Aptitude",
-    type: "Essay",
-    title: "A car accelerates uniformly from rest to a speed of 25 m/s over a distance of 100 meters.",
-    prompt: [
-      "Calculate the time taken to reach this speed.",
-      "Determine the acceleration of the car.",
-    ],
-  },
-  {
-    id: 22,
-    section: "Quantitative Aptitude",
-    type: "Essay",
-    title: "Discuss three strategies to improve the critical reading skills of high school students.",
-    prompt: [
-      "Berikan contoh penerapannya di kelas.",
-    ],
-  },
-  {
-    id: 23,
-    section: "Quantitative Aptitude",
-    type: "Essay",
-    title: "Explain the relationship between formative assessment and student motivation.",
-    prompt: [
-      "Sertakan dua referensi teoretis yang relevan.",
-    ],
-  },
-];
-
-const QUESTION_IDS = Array.from({ length: 30 }, (_, idx) => idx + 1);
-const EXAM_DURATION_SECONDS = 60 * 60;
 
 const STATUS_STYLES: Record<QuestionStatus, string> = {
   answered: "border-emerald-300 bg-emerald-100 text-emerald-700",
@@ -65,21 +25,25 @@ const LEGEND: Array<{ status: QuestionStatus; label: string; dotClass: string }>
   { status: "markedAndAnswered", label: "Answered & Marked", dotClass: "bg-blue-500" },
 ];
 
-function roundToHalfBand(value: number) {
-  const clamped = Math.max(0, Math.min(9, value));
-  return Math.round(clamped * 2) / 2;
-}
+const EXAM_DURATION_SECONDS = 60 * 60;
 
 export default function ExamPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [questionsError, setQuestionsError] = useState("");
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [responses, setResponses] = useState<Record<number, string>>({ 0: "" });
-  const [statuses, setStatuses] = useState<QuestionStatus[]>(() =>
-    QUESTION_IDS.map((_, idx) => (idx === 0 ? "notAnswered" : "notVisited"))
-  );
+  const [statuses, setStatuses] = useState<QuestionStatus[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(EXAM_DURATION_SECONDS - 50);
-  const [submitted, setSubmitted] = useState(false);
+
+  const [saved, setSaved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [scoreReceived, setScoreReceived] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -90,7 +54,40 @@ export default function ExamPage() {
     if (user.role === "admin") {
       router.replace("/dashboard");
     }
+    // if (user.role === "user") {
+    //   router.replace("/");
+    // }
   }, [loading, user, router]);
+
+  // fetch questions
+  useEffect(() => {
+    async function fetchQuestions() {
+      try {
+        setQuestionsLoading(true);
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*')
+          .order('id', { ascending: true })
+          .limit(30);
+        
+        if (error) throw error;
+        
+        setQuestions(data || []);
+        const questionCount = data?.length || 0;
+        setStatuses(Array(questionCount).fill("notVisited").map((_, idx) => 
+          idx === 0 ? "notAnswered" : "notVisited"
+        ));
+        setResponses({ 0: "" });
+      } catch (err) {
+        setQuestionsError(err instanceof Error ? err.message : 'Failed to load questions');
+      } finally {
+        setQuestionsLoading(false);
+      }
+    }
+      if (user && user.role !== "admin") {
+        fetchQuestions();
+      }
+    }, [user]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -99,23 +96,25 @@ export default function ExamPage() {
     return () => window.clearInterval(id);
   }, []);
 
-  const question = useMemo(() => QUESTIONS[activeIndex % QUESTIONS.length], [activeIndex]);
+  const question = useMemo(() => questions[activeIndex], [questions, activeIndex]);
   const answer = responses[activeIndex] ?? "";
   const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+  const totalQuestions = questions.length;
 
-  const totalQuestions = QUESTION_IDS.length;
-  const attemptedCount = useMemo(
-    () =>
-      statuses.filter((status) => status === "answered" || status === "markedAndAnswered").length,
-    [statuses]
-  );
-  const markedCount = useMemo(
-    () => statuses.filter((status) => status === "marked" || status === "markedAndAnswered").length,
-    [statuses]
-  );
+  const attemptedCount = statuses.filter((s) => s === "answered" || s === "markedAndAnswered").length;
+  const markedCount = statuses.filter((s) => s === "marked" || s === "markedAndAnswered").length;
 
-  if (loading || !user || user.role === "admin") {
-    return null;
+  if (questionsLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          </div>
+          <p className="text-slate-600">Loading questions...</p>
+        </div>
+      </div>
+    );
   }
 
   function computeStatus(index: number, currentStatus: QuestionStatus, value: string) {
@@ -139,7 +138,7 @@ export default function ExamPage() {
   }
 
   function moveToQuestion(nextIndex: number) {
-    if (nextIndex < 0 || nextIndex >= QUESTION_IDS.length) return;
+    if (nextIndex < 0 || nextIndex >= totalQuestions) return;
     setStatuses((prev) =>
       prev.map((status, idx) => {
         if (idx === nextIndex) {
@@ -159,7 +158,7 @@ export default function ExamPage() {
   }
 
   function goNext() {
-    if (activeIndex < QUESTION_IDS.length - 1) {
+    if (activeIndex < totalQuestions - 1) {
       moveToQuestion(activeIndex + 1);
     }
   }
@@ -185,7 +184,7 @@ export default function ExamPage() {
   }
 
   function saveAndNext() {
-    setSubmitted(true);
+    setSaved(true);
     setStatuses((prev) =>
       prev.map((status, idx) => {
         if (idx === activeIndex) {
@@ -197,59 +196,100 @@ export default function ExamPage() {
     goNext();
   }
 
-  function submitPaper() {
-    const normalizedStatuses = statuses.map((status, idx) => {
-      const visitedStatus = ensureVisited(idx, status);
-      return computeStatus(idx, visitedStatus, responses[idx] ?? "");
-    });
+// submit function
+  async function submitPaper() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmissionError("");
 
-    const totalCount = QUESTION_IDS.length;
-    const answeredCount = normalizedStatuses.filter(
-      (status) => status === "answered" || status === "markedAndAnswered"
-    ).length;
-    const markedTotal = normalizedStatuses.filter(
-      (status) => status === "marked" || status === "markedAndAnswered"
-    ).length;
-    const skippedCount = Math.max(0, totalCount - answeredCount);
-    const maxScore = totalCount * 10;
-    const score = answeredCount * 10;
-    const timeTakenSeconds = Math.max(0, EXAM_DURATION_SECONDS - secondsLeft);
-    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+    try {
+      const essays = questions.map((_, idx) => responses[idx] || "");
 
-    const baseBand = percentage > 0 ? (percentage / 100) * 9 : 0;
-    const taskAchievement = roundToHalfBand(baseBand);
-    const coherenceAndCohesion = roundToHalfBand(
-      baseBand - (skippedCount > 0 ? Math.min(1.5, skippedCount / totalCount) : 0)
-    );
-    const lexicalResource = roundToHalfBand(baseBand - (markedTotal > totalCount * 0.2 ? 0.5 : 0.25));
-    const grammaticalRange = roundToHalfBand(
-      baseBand - (answeredCount < totalCount * 0.6 ? 0.75 : totalCount > 0 ? 0.25 : 0)
-    );
-    const overallBand = roundToHalfBand(
-      (taskAchievement + coherenceAndCohesion + lexicalResource + grammaticalRange) / 4
-    );
+      if (essays.every((e)=> e.trim()==="")){
+        setSubmissionError("Cannot submit empty answers");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Submit to API, route exam
+      const response = await fetch("/api/exam", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "submit-essays",
+          essays,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit");
+      }
+      
+      setStatuses((prev) =>
+        prev.map((status) => (status === "notVisited" ? "notAnswered" : status))
+      );
+      
+      // debug score
+      console.log('Scores received:', data);
+      setScoreReceived(true);
 
-    setSubmitted(true);
-    setStatuses(normalizedStatuses);
+      // arahkan ke page lain (to do)
+      const normalizedStatuses = statuses.map((status, idx) => {
+        const visitedStatus = ensureVisited(idx, status);
+        return computeStatus(idx, visitedStatus, responses[idx] ?? "");
+      });
+  
+      const totalCount = questions.length;
+      const answeredCount = normalizedStatuses.filter(
+        (status) => status === "answered" || status === "markedAndAnswered"
+      ).length;
+      const markedTotal = normalizedStatuses.filter(
+        (status) => status === "marked" || status === "markedAndAnswered"
+      ).length;
+      const skippedCount = Math.max(0, totalCount - answeredCount);
+      const timeTakenSeconds = Math.max(0, EXAM_DURATION_SECONDS - secondsLeft);
 
-    const params = new URLSearchParams({
-      total: String(totalCount),
-      attempted: String(answeredCount),
-      marked: String(markedTotal),
-      skipped: String(skippedCount),
-      score: String(score),
-      maxScore: String(maxScore),
-      timeTaken: String(timeTakenSeconds),
-      duration: String(EXAM_DURATION_SECONDS),
-      percentage: String(Math.round(percentage)),
-      ta: taskAchievement.toString(),
-      cc: coherenceAndCohesion.toString(),
-      lr: lexicalResource.toString(),
-      gr: grammaticalRange.toString(),
-      band: overallBand.toString(),
-    });
-
-    router.push(`/exam/score?${params.toString()}`);
+      const maxScore = totalCount * 10;
+      const score = answeredCount * 10;
+      
+      const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  
+      //
+      const taskAchievement = data.task_achievement_average;
+      const coherenceAndCohesion = data.coherence_and_cohesion_average;
+      const lexicalResource = data.lexical_resource_average;
+      const grammaticalRange = data.grammatical_range_average;
+      const overallBand = 
+        (taskAchievement + coherenceAndCohesion + lexicalResource + grammaticalRange) / 4
+      ;
+  
+      setStatuses(normalizedStatuses);
+  
+      const params = new URLSearchParams({
+        total: String(totalCount),
+        attempted: String(answeredCount),
+        marked: String(markedTotal),
+        skipped: String(skippedCount),
+        score: String(score),
+        maxScore: String(maxScore),
+        timeTaken: String(timeTakenSeconds),
+        duration: String(EXAM_DURATION_SECONDS),
+        percentage: String(Math.round(percentage)),
+        ta: String(taskAchievement),
+        cc: String(coherenceAndCohesion),
+        lr: String(lexicalResource),
+        gr: String(grammaticalRange),
+        band: String(overallBand),
+      });
+  
+      router.push(`/exam/score?${params.toString()}`);
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : "Submission failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function formatTime(seconds: number) {
@@ -271,7 +311,7 @@ export default function ExamPage() {
               </div>
               <div className="hidden sm:block text-xs text-sky-100">
                 <div className="font-semibold">{user?.name ?? "Peserta"}</div>
-                <div>LongAnswerTypeQuestion</div>
+                <div>Long Answer Type Question</div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -287,8 +327,13 @@ export default function ExamPage() {
                 <div>ID: IG-{user?.email?.split("@")[0] ?? "0001"}</div>
                 <div>Attempted {attemptedCount}/{totalQuestions}</div>
               </div>
-              <button onClick={submitPaper} className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400">
-                Finish Test
+              {/* finish test */}
+              <button 
+                onClick={submitPaper} 
+                disabled={isSubmitting}
+                className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400 disabled:opacity-50"
+                >
+                {isSubmitting ? "Submitting..." : "Finish Test"}
               </button>
             </div>
           </header>
@@ -297,7 +342,7 @@ export default function ExamPage() {
             <main className="space-y-5 border-b border-slate-200 bg-[#f7f9fc] px-6 py-6 md:border-b-0 md:border-r">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">
-                  <span>{question.section}</span>
+                  {/* <span>{question.section}</span> */}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -312,18 +357,17 @@ export default function ExamPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                   <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-700">
-                    <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-600 uppercase">Question {QUESTION_IDS[activeIndex]}</span>
-                    <span className="rounded-md bg-slate-100 px-2 py-1">{question.type} question</span>
+                    <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-600 uppercase">Question {activeIndex + 1}</span>
                   </div>
                   <span>Marks 0.1 | Negative 0.33</span>
                 </div>
-                <h2 className="mt-4 text-base font-semibold text-slate-900">{question.title}</h2>
-                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-600">
-                  {question.prompt.map((line, idx) => (
-                    <li key={idx}>{line}</li>
-                  ))}
-                </ol>
+
+              <div className="mt-3 text-sm text-slate-600">
+                <div className="rounded-md border border-transparent p-0 text-slate-700 whitespace-pre-line">
+                  {question.prompt}
+                </div>
               </div>
+            </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 text-xs text-slate-500 shadow-sm">
                 <h3 className="mb-3 text-sm font-semibold text-slate-800">Instructions</h3>
@@ -340,16 +384,10 @@ export default function ExamPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-800">Enter your Response</h3>
-                    <p className="mt-1 text-xs text-slate-500">Word count {wordCount} / 250</p>
                   </div>
                   <button onClick={clearResponse} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:border-slate-300">
                     Clear Response
                   </button>
-                </div>
-
-                <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm1 14v-2h-2v2h2Zm0-4V6h-2v6h2Z"/></svg>
-                  <p>Browser plugin terdeteksi dapat mengganggu penyimpanan otomatis. Nonaktifkan sementara agar jawaban aman.</p>
                 </div>
 
                 <textarea
@@ -365,67 +403,79 @@ export default function ExamPage() {
                 </div>
               </div>
 
-              {submitted && (
+              {saved && (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800">
                   Jawaban tersimpan. Anda dapat meninjau ulang sebelum waktu berakhir.
                 </div>
               )}
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      onClick={goPrev}
-                      type="button"
-                      disabled={activeIndex === 0}
-                      className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={saveAndNext}
-                      type="button"
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
-                    >
-                      Save & Next
-                    </button>
-                    <button
-                      onClick={markForReview}
-                      type="button"
-                      className="rounded-lg border border-purple-300 bg-purple-100 px-4 py-2 text-sm font-semibold text-purple-700 transition hover:bg-purple-200"
-                    >
-                      Mark for Review & Next
-                    </button>
-                    <button
-                      onClick={submitPaper}
-                      type="button"
-                      className="rounded-lg border border-emerald-400 bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-emerald-600"
-                    >
-                      Submit Paper
-                    </button>
-                  </div>
+              {isSubmitting && !scoreReceived && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800">
+                  Semua jawaban telah tersimpan. Hasil akan keluar sesaat lagi
                 </div>
+              )}
+
+              {submissionError && (
+                <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800">
+                  Error: {submissionError}
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button
+                    onClick={goPrev}
+                    disabled={activeIndex === 0}
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={saveAndNext}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
+                  >
+                    Save & Next
+                  </button>
+                  <button
+                    onClick={markForReview}
+                    className="rounded-lg border border-purple-300 bg-purple-100 px-4 py-2 text-sm font-semibold text-purple-700 transition hover:bg-purple-200"
+                  >
+                    Mark for Review & Next
+                  </button>
+
+                  <button
+                    onClick={submitPaper}
+                    disabled={isSubmitting}
+                    className="rounded-lg border border-emerald-400 bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Paper"}
+                  </button>
+                </div>
+              </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-slate-800">Question Navigator</h4>
                   <span className="text-xs text-slate-500">Total {totalQuestions}</span>
                 </div>
+
                 <div className="mt-4 grid grid-cols-5 gap-2 text-xs font-semibold">
-                  {QUESTION_IDS.map((id, idx) => {
-                    const status = statuses[idx];
-                    const isActive = idx === activeIndex;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => moveToQuestion(idx)}
-                        className={`h-10 w-10 rounded-full border transition ${STATUS_STYLES[status]} ${isActive ? "ring-2 ring-offset-2 ring-blue-400" : ""}`}
-                      >
-                        {id}
-                      </button>
-                    );
-                  })}
-                </div>
+                {questions.map((_, idx) => {
+                  const status = statuses[idx];
+                  const isActive = idx === activeIndex;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => moveToQuestion(idx)}
+                      className={`h-10 w-10 rounded-full border transition ${STATUS_STYLES[status]} ${isActive ? "ring-2 ring-offset-2 ring-blue-400" : ""}`}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
                 <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500">
                   {LEGEND.map((item) => (
                     <div key={item.status} className="flex items-center gap-2">

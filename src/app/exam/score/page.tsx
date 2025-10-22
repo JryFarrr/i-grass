@@ -12,6 +12,7 @@ const IELTS_CHARACTERISTICS = [
   { key: "grammaticalRange", label: "Grammatical Range" },
 ] as const;
 
+// gak perlu
 function normalizeBandScore(value: number) {
   if (!Number.isFinite(value)) {
     return 0;
@@ -135,7 +136,7 @@ export default function ExamScorePage() {
       helper: `dari ${metrics.total} soal`,
     },
     {
-      label: "Akurasi Jawaban",
+      label: "Persentase Terjawab",
       value: `${Math.min(100, Math.max(0, accuracy))}%`,
       helper: `${metrics.attempted}/${metrics.total} soal terjawab`,
     },

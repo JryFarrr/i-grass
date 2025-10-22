@@ -1,0 +1,3 @@
+next
+@supabase/supabase-js bullmq ioredis axios p-limit @supabase/ssr
+--save-dev @types/node

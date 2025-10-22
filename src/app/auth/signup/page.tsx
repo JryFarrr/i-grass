@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth, getLandingPathForRole } from "../../components/auth-context";
+import { ChangeEvent } from 'react';
 
 export default function SignupPage() {
   const { signup, user, loading: authLoading } = useAuth();
