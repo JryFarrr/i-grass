@@ -1,0 +1,38 @@
+[
+  {
+    "id": "3a56d96f-2de4-46fd-8efd-fbfe5d1a5b4a",
+    "name": "Pengguna Demo",
+    "email": "demo@igras.app",
+    "passwordHash": "9984946b30f288e1353909eedf010f2160f9840d7ede7e6a451d166fae9e0d0befffff5225d834f727769d122e1de3e0859eab83c6670afe21da35976a84cd61",
+    "salt": "280e2ee832a8791247401ebdafbe9a12",
+    "createdAt": "2025-09-29T09:45:35.140Z",
+    "role": "admin"
+  },
+  {
+    "id": "0e2b85e8-daff-46c9-8ad0-31a6dc2d1fa4",
+    "name": "triwanto",
+    "email": "triwanto@gmail.com",
+    "passwordHash": "9c4717e3e36e62d78b19dd91bd127b0f81cbed5d9bab37ff89e5fcc7f543e00a90a2727ba697e0f18621d102c773a33faf1a66ae30dd1816c5faa5d39fbfac7b",
+    "salt": "16b57085ccf5bc1a2102438051e83730",
+    "createdAt": "2025-09-30T00:57:31.900Z",
+    "role": "user"
+  },
+  {
+    "id": "dfe437eb-297e-4661-bade-4e0be5d3363a",
+    "name": "admin12345",
+    "email": "admin123@gmail.com",
+    "passwordHash": "a6e3e86224a320aec699463ac6309a4ab8b36747b7c73a2174337a025deb7a0ada58a168a0d29db6b4b297a7a78310362badb63d6910c8c9d2897e1afcfc20a9",
+    "salt": "6f462f92d794581ed9bc9c87f9b139c8",
+    "createdAt": "2025-10-05T02:22:30.398Z",
+    "role": "user"
+  },
+  {
+    "id": "0541fdb0-5a9e-4ed2-9b60-b9cd699d4a17",
+    "name": "jer",
+    "email": "jirahu@gmail.com",
+    "passwordHash": "41f0f2f448f696aad95337b2ff12298f3b0ddfd5e980c9fa440af966f153a5f77d72864a9abc38fce2a7c5b0a62d11e5021f457124adab776357dc8af241bc00",
+    "salt": "70e5527267407f6311e482c0cf1b38a1",
+    "createdAt": "2025-10-19T03:44:42.810Z",
+    "role": "user"
+  }
+]
