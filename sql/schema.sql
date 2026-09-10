@@ -67,3 +67,19 @@ create policy "scores_insert" on public.scores for insert to anon, authenticated
 
 drop policy if exists "scores_delete" on public.scores;
 create policy "scores_delete" on public.scores for delete to anon, authenticated using (true);
+
+-- =========================
+-- PASSWORD RESET (lupa password)
+-- Token disimpan sebagai hash; hanya diproses di server (service role).
+-- Tanpa RLS policy (dibypass service key; tidak bisa diakses anon).
+-- =========================
+create table if not exists public.password_reset_tokens (
+    id         uuid primary key default gen_random_uuid(),
+    user_id    uuid not null references public.users(id) on delete cascade,
+    token_hash text not null unique,
+    expires_at timestamptz not null,
+    used       boolean not null default false,
+    created_at timestamptz not null default now()
+);
+
+create index if not exists pr_token_idx on public.password_reset_tokens(token_hash);

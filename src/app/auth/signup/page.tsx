@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -93,15 +94,31 @@ export default function SignupPage() {
           />
 
           <label className="block text-sm mb-2">Kata sandi</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
-            className="w-full mb-6 rounded-xl bg-transparent border px-4 py-2.5 outline-none focus:border-blue-500"
-            style={{ borderColor: "var(--glass-border)" }}
-            placeholder="Minimal 6 karakter"
-          />
+          <div className="relative mb-6">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}
+              className="w-full rounded-xl bg-transparent border px-4 py-2.5 pr-11 outline-none focus:border-blue-500"
+              style={{ borderColor: "var(--glass-border)" }}
+              placeholder="Minimal 6 karakter"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                {showPassword ? (
+                  <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><line x1="4" y1="4" x2="20" y2="20"/></>
+                ) : (
+                  <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></>
+                )}
+              </svg>
+            </button>
+          </div>
 
           <button
             type="submit"
