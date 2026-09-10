@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ielts-scoring-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    region: singapore

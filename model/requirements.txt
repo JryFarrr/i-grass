@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+joblib
+sentence-transformers==2.6.1
+transformers==4.41.1
+huggingface-hub==0.23.0
+xgboost
+numpy
+nltk
+pydantic==2.7.4
+python-multipart

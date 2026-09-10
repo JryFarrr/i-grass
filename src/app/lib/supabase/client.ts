@@ -57,7 +57,7 @@ export async function getScoreByUserId(user_id: string){
 export async function submitAndScoreEssays(essays: string[]){
     try{
         const hfResponse = await fetch(
-            `${process.env.HUGGINGFACE_API_URL}/predict/avg`, 
+            `${process.env.MODEL_API_URL}/predict/avg`, 
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -65,7 +65,7 @@ export async function submitAndScoreEssays(essays: string[]){
             });
 
         if (!hfResponse.ok) {
-            throw new Error(`Hugging Face API error: ${hfResponse.statusText}`);
+            throw new Error(`Model API error: ${hfResponse.statusText}`);
         }
     
         const hfData = await hfResponse.json();
