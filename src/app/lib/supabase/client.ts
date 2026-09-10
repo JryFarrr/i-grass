@@ -48,10 +48,11 @@ export async function getScoreByUserId(user_id: string){
     .from('scores')
     .select('*')
     .eq('user_id', user_id)
-    .maybeSingle();
+    .order('created_at', { ascending: false })
+    .limit(1);
 
     if (error) throw error;
-    return data as Score | null;
+    return (data?.[0] as Score | undefined) ?? null;
 }
 
 export async function submitAndScoreEssays(essays: string[]){
