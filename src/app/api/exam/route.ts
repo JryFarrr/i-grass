@@ -34,19 +34,20 @@ export async function POST(req: NextRequest) {
 
         if (action === 'submit-essays'){
             const { essays } = body;
-            const scores = await submitAndScoreEssays(essays);
+            const { averages, tasks } = await submitAndScoreEssays(essays);
             const Score = await savedScore(
                 user.id,
-                scores.task_achievement_average,
-                scores.coherence_and_cohesion_average,
-                scores.lexical_resource_average,
-                scores.grammatical_range_average
+                averages.task_achievement_average,
+                averages.coherence_and_cohesion_average,
+                averages.lexical_resource_average,
+                averages.grammatical_range_average
               );
         // maybe rate-limiting
         // const job = await
               return NextResponse.json({
                 message: 'Essays submitted and scored successfully',
                 ...Score,
+                tasks,
               });
             }
             return NextResponse.json(

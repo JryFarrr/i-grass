@@ -55,10 +55,17 @@ export async function getScoreByUserId(user_id: string){
     return (data?.[0] as Score | undefined) ?? null;
 }
 
+export type TaskScores = {
+  task_achievement: number;
+  coherence_and_cohesion: number;
+  lexical_resource: number;
+  grammatical_range: number;
+};
+
 export async function submitAndScoreEssays(essays: string[]){
     try{
         const hfResponse = await fetch(
-            `${process.env.MODEL_API_URL}/predict/avg`, 
+            `${process.env.MODEL_API_URL}/predict/both`, 
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,8 +88,15 @@ export async function submitAndScoreEssays(essays: string[]){
           grammatical_range_average: Math.round(avgPreds.grammatical_range * 2) / 2,
         };
 
-        console.log('success :', avgPreds, averages);
-        return averages;
+        const tasks: TaskScores[] = (hfData.predictions ?? []).map((p: TaskScores) => ({
+          task_achievement: p.task_achievement,
+          coherence_and_cohesion: p.coherence_and_cohesion,
+          lexical_resource: p.lexical_resource,
+          grammatical_range: p.grammatical_range,
+        }));
+
+        console.log('success :', avgPreds, averages, tasks);
+        return { averages, tasks };
     } catch (error) {
       console.error('Error in submitAndScoreEssays:', error);
       throw error;

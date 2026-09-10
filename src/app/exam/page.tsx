@@ -288,6 +288,14 @@ export default function ExamPage() {
         lr: String(lexicalResource),
         gr: String(grammaticalRange),
         band: String(overallBand),
+        t1: String(data.tasks?.[0]?.task_achievement ?? ""),
+        t1_cc: String(data.tasks?.[0]?.coherence_and_cohesion ?? ""),
+        t1_lr: String(data.tasks?.[0]?.lexical_resource ?? ""),
+        t1_gr: String(data.tasks?.[0]?.grammatical_range ?? ""),
+        t2: String(data.tasks?.[1]?.task_achievement ?? ""),
+        t2_cc: String(data.tasks?.[1]?.coherence_and_cohesion ?? ""),
+        t2_lr: String(data.tasks?.[0]?.lexical_resource ?? ""),
+        t2_gr: String(data.tasks?.[1]?.grammatical_range ?? ""),
       });
   
       router.push(`/exam/score?${params.toString()}`);

@@ -108,6 +108,27 @@ export default function ExamScorePage() {
       ? normalizeBandScore(storedAverage)
       : normalizeBandScore(derivedAverage);
 
+    const taskFrom = (prefix: string, fallback: number) => {
+      const raw = getDecimal(`${prefix}_ta`);
+      if (!Number.isFinite(raw)) {
+        return {
+          band: fallback,
+          scores: bandScores,
+        };
+      }
+      const scores = {
+        taskAchievement: normalizeBandScore(raw),
+        coherenceAndCohesion: parseBand(`${prefix}_cc`),
+        lexicalResource: parseBand(`${prefix}_lr`),
+        grammaticalRange: parseBand(`${prefix}_gr`),
+      };
+      const avg = (scores.taskAchievement + scores.coherenceAndCohesion + scores.lexicalResource + scores.grammaticalRange) / 4;
+      return { band: normalizeBandScore(avg), scores };
+    };
+    const baseBandOverall = derivedAverage;
+    const task1 = taskFrom("t1", normalizeBandScore(baseBandOverall));
+    const task2 = taskFrom("t2", normalizeBandScore(baseBandOverall));
+
     return {
       total,
       attempted,
@@ -119,6 +140,7 @@ export default function ExamScorePage() {
       remainingSeconds,
       bandScores,
       overallBand,
+      tasks: [task1, task2],
     };
   }, [searchParams]);
 
@@ -127,7 +149,7 @@ export default function ExamScorePage() {
   }
   const accuracy = metrics.total > 0 ? Math.round((metrics.attempted / metrics.total) * 100) : 0;
   const firstName = user.name?.split(" ")?.[0] ?? "Peserta";
-  const progressWidth = `${Math.min(100, Math.max(0, metrics.percentage))}%`;
+  const progressWidth = `${Math.min(100, Math.max(0, (metrics.overallBand / 9) * 100))}%`;
 
   const stats = [
     {
@@ -179,10 +201,10 @@ export default function ExamScorePage() {
               <div className="rounded-3xl border border-sky-100 bg-sky-50/80 p-6 shadow-sm lg:col-span-2">
                 <div className="flex flex-wrap items-end justify-between gap-6">
                   <div>
-                    <p className="text-sm font-medium text-sky-700">Total Skor</p>
-                    <p className="mt-3 text-5xl font-bold text-slate-900">{metrics.score}</p>
+                    <p className="text-sm font-medium text-sky-700">Band Keseluruhan</p>
+                    <p className="mt-3 text-5xl font-bold text-slate-900">{metrics.overallBand.toFixed(1)}</p>
                     <p className="text-sm text-sky-600">
-                      dari {metrics.maxScore} poin | {metrics.percentage}% tercapai
+                      Rata-rata {metrics.attempted} task · Skala band IELTS 0-9
                     </p>
                   </div>
                   <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-sky-200 bg-white text-xl font-semibold text-sky-700 shadow-inner">
@@ -194,7 +216,7 @@ export default function ExamScorePage() {
                     <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: progressWidth }} />
                   </div>
                   <p className="mt-2 text-xs text-sky-600">
-                    Target minimal 70% {metrics.percentage >= 70 ? "sudah" : "belum"} tercapai.
+                    Berikut rincian progres band kamu dari empat kriteria penilaian IELTS Writing Task 2.
                   </p>
                 </div>
               </div>
@@ -243,6 +265,39 @@ export default function ExamScorePage() {
                   <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Breakdown per Task */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2].map((taskNum, i) => {
+                const t = metrics.tasks[i];
+                return (
+                  <div key={taskNum} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-slate-800">IELTS Writing Task {taskNum}</div>
+                      <div className="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">
+                        Band {t.band.toFixed(1)}
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {IELTS_CHARACTERISTICS.map(({ key, label }) => (
+                        <div key={key}>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500">{label}</span>
+                            <span className="font-semibold text-slate-700">{t.scores[key].toFixed(1)}</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-100">
+                            <div
+                              className="h-full rounded-full bg-blue-500"
+                              style={{ width: `${Math.min(100, Math.max(0, (t.scores[key] / 9) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 text-slate-100 shadow-sm">
