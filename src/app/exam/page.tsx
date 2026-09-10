@@ -26,6 +26,12 @@ const LEGEND: Array<{ status: QuestionStatus; label: string; dotClass: string }>
 ];
 
 const EXAM_DURATION_SECONDS = 60 * 60;
+// Format Writing IELTS: Task 1 (150+ kata, saran 20 menit), Task 2 (250+ kata, saran 40 menit)
+const TASK_MIN_WORDS = [150, 250];
+const TASK_LABELS: Record<number, string> = {
+  0: "IELTS Writing Task 1 — minimal 150 kata · saran 20 menit",
+  1: "IELTS Writing Task 2 — minimal 250 kata · saran 40 menit",
+};
 
 export default function ExamPage() {
   const { user, loading } = useAuth();
@@ -66,15 +72,15 @@ export default function ExamPage() {
         setQuestionsLoading(true);
         const { data, error } = await supabase
           .from('questions')
-          .select('*')
-          .order('id', { ascending: true })
-          .limit(30);
-        
+          .select('*');
+
         if (error) throw error;
-        
-        setQuestions(data || []);
-        const questionCount = data?.length || 0;
-        setStatuses(Array(questionCount).fill("notVisited").map((_, idx) => 
+
+        // Format Writing IELTS: 2 task, diambil acak dari DB
+        const shuffled = (data ?? []).sort(() => Math.random() - 0.5).slice(0, 2);
+        setQuestions(shuffled);
+        const questionCount = shuffled.length || 0;
+        setStatuses(Array(questionCount).fill("notVisited").map((_, idx) =>
           idx === 0 ? "notAnswered" : "notVisited"
         ));
         setResponses({ 0: "" });
@@ -311,7 +317,7 @@ export default function ExamPage() {
               </div>
               <div className="hidden sm:block text-xs text-sky-100">
                 <div className="font-semibold">{user?.name ?? "Peserta"}</div>
-                <div>Long Answer Type Question</div>
+                <div>IELTS Writing Task 2 · 2 soal · 60 menit</div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -357,9 +363,9 @@ export default function ExamPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                   <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-700">
-                    <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-600 uppercase">Question {activeIndex + 1}</span>
+                    <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-600 uppercase">IELTS Writing — Task {activeIndex + 1} of 2</span>
                   </div>
-                  <span>Marks 0.1 | Negative 0.33</span>
+                  <span className="font-medium text-sky-700">{TASK_LABELS[activeIndex]}</span>
                 </div>
 
               <div className="mt-3 text-sm text-slate-600">
@@ -372,7 +378,8 @@ export default function ExamPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-5 text-xs text-slate-500 shadow-sm">
                 <h3 className="mb-3 text-sm font-semibold text-slate-800">Instructions</h3>
                 <ul className="list-disc space-y-2 pl-4">
-                  <li>Pastikan jawaban minimal 100 kata agar sistem menilai secara optimal.</li>
+                                    <li>Task 1 minimal 150 kata, Task 2 minimal 250 kata agar sistem menilai secara optimal.</li>
+                  <li>Atur waktu: saran 20 menit untuk Task 1 dan 40 menit untuk Task 2 (total 60 menit).</li>
                   <li>Gunakan tombol Save & Next sebelum berpindah ke soal berikutnya.</li>
                   <li>Tandai soal dengan Mark for Review & Next untuk ditinjau ulang nanti.</li>
                 </ul>
