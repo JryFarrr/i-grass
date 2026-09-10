@@ -307,12 +307,20 @@ export default function ExamScorePage() {
                 lalu perkuat dengan latihan terstruktur dan umpan balik mentor agar rata-rata band semakin naik.
               </p>
               <div className="mt-6">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow transition hover:bg-slate-200"
-                >
-                  Kembali ke Dashboard
-                </Link>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow transition hover:bg-slate-200"
+                  >
+                    Kembali ke Beranda
+                  </Link>
+                  <Link
+                    href="/exam"
+                    className="inline-flex items-center justify-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-sky-400"
+                  >
+                    Ikuti Ujian Lagi
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
