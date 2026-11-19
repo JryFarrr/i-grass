@@ -40,6 +40,8 @@ penilaian ujian siswa/mahasiswa secara efisien, cepat, dan akurat (saat ini berb
 
 ## Deployment Model — 3 Opsi
 
+Live demo saat ini menjalankan backend Next.js di **Vercel**, yang melakukan panggilan API (API calling) secara live ke server model Machine Learning yang dideploy di **Modal** (`model/modal_app.py`).
+
 `model/` di-deploy terpisah (tidak ikut Next build). CMD Dockerfile membaca `$PORT`.
 
 | Opsi | File | Status | Catatan |
